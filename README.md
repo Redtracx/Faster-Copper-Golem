@@ -20,8 +20,8 @@ _configurable through [mod menu](https://modrinth.com/mod/modmenu)_
 ## Config Options
 ### Interaction time options
 - Vanilla | 60 ticks
-- Fast | 30 ticks
-- Faster (default) | 15 ticks
+- Fast (default) | 30 ticks
+- Faster | 15 ticks
 - Fastest | 3 ticks
 
 ### Maximum carry size options
