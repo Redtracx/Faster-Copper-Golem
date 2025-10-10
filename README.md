@@ -48,3 +48,5 @@ _configurable through [mod menu](https://modrinth.com/mod/modmenu)_
 - More | 50 chests
 - Most | 120 chests
 - Extreme | 1024 chests
+
+![Faster copper golems settings menu)](https://github.com/PixelIndieDev/Faster-Copper-Golem/blob/main/documentation/previews/fastercoppergolem-settings.png?raw=true)
