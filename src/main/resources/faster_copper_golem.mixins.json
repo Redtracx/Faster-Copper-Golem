@@ -1,0 +1,19 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "com.pixelindiedev.faster_copper_golem.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "mixins": [
+    "CopperGolemMixin",
+    "MoveItemsTaskAccessor",
+    "MoveItemsTaskMixin"
+  ],
+  "client": [
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  },
+  "overwrites": {
+    "requireAnnotations": true
+  }
+}
