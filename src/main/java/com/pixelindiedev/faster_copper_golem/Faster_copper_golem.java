@@ -47,6 +47,16 @@ public class Faster_copper_golem implements ModInitializer {
         };
     }
 
+    public static int getInteractionTime(int originalTime) {
+        if (interactionTimeCache == -1) interactionTimeCache = Math.round(originalTime * getSpeedMultiplier());
+        return interactionTimeCache;
+    }
+
+    public static int getCooldownTime(int originalTime) {
+        if (cooldownTimeCache == -1) cooldownTimeCache = Math.round(originalTime * getSpeedMultiplier());
+        return cooldownTimeCache;
+    }
+
     public static int getInteractionTime() {
         if (interactionTimeCache == -1) interactionTimeCache = Math.round(60 * getSpeedMultiplier());
         return interactionTimeCache;
@@ -68,6 +78,16 @@ public class Faster_copper_golem implements ModInitializer {
 
     public static int getMaxStackSize() {
         return CONFIG.gollemMaxStackSize;
+    }
+
+    public static int getMaxChestsRemembered(int originalCount) {
+        return switch (CONFIG.gollemAmountChestRemembered) {
+            case Many -> (int) (originalCount * 2.5f);
+            case More -> originalCount * 5;
+            case Most -> originalCount * 12;
+            case Extreme -> (int) (originalCount * 102.4f);
+            case null, default -> 10;
+        };
     }
 
     public static int getMaxChestsRemembered() {

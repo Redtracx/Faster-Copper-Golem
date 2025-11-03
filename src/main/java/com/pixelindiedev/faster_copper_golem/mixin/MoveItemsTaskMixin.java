@@ -1,14 +1,13 @@
 package com.pixelindiedev.faster_copper_golem.mixin;
 
+import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import net.minecraft.entity.ai.brain.task.MoveItemsTask;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Mutable;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Constant;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.ModifyConstant;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.Map;
@@ -17,7 +16,7 @@ import java.util.function.Predicate;
 
 import static com.pixelindiedev.faster_copper_golem.Faster_copper_golem.*;
 
-@Mixin(value = MoveItemsTask.class, priority = 1015)
+@Mixin(value = MoveItemsTask.class, priority = 800)
 public abstract class MoveItemsTaskMixin {
     @Mutable
     @Final
@@ -32,7 +31,7 @@ public abstract class MoveItemsTaskMixin {
     @Shadow
     private float speed;
 
-    @ModifyConstant(method = "extractStack", constant = @Constant(intValue = 16))
+    @ModifyExpressionValue(method = "extractStack", at = @At(value = "CONSTANT", args = "intValue=16"))
     private static int increaseStackAmount(int original) {
         return getMaxStackSize();
     }
@@ -46,18 +45,18 @@ public abstract class MoveItemsTaskMixin {
         AddTask((MoveItemsTask) (Object) this);
     }
 
-    @ModifyConstant(method = "tickInteracting", constant = @Constant(intValue = 60))
+    @ModifyExpressionValue(method = "tickInteracting", at = @At(value = "CONSTANT", args = "intValue=60"))
     private int reduceInteractionTime(int original) {
-        return getInteractionTime();
+        return getInteractionTime(original);
     }
 
-    @ModifyConstant(method = "cooldown", constant = @Constant(intValue = 140))
+    @ModifyExpressionValue(method = "cooldown", at = @At(value = "CONSTANT", args = "intValue=140"))
     private int reduceCooldown(int original) {
-        return getCooldownTime();
+        return getCooldownTime(original);
     }
 
-    @ModifyConstant(method = "markVisited", constant = @Constant(intValue = 10))
+    @ModifyExpressionValue(method = "markVisited", at = @At(value = "CONSTANT", args = "intValue=10"))
     private int increaseVisitedChestMemory(int original) {
-        return getMaxChestsRemembered();
+        return getMaxChestsRemembered(original);
     }
 }
