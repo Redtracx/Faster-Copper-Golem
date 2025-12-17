@@ -1,7 +1,6 @@
 package com.pixelindiedev.faster_copper_golem.mixin;
 
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
-import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import net.minecraft.entity.ai.brain.task.MoveItemsTask;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -38,7 +37,6 @@ import net.minecraft.util.Nameable;
 
 import static com.pixelindiedev.faster_copper_golem.Faster_copper_golem.*;
 
-@Mixin(value = MoveItemsTask.class, priority = 800)
 @Mixin(value = MoveItemsTask.class, priority = 800)
 public abstract class MoveItemsTaskMixin {
     @Mutable
@@ -222,20 +220,15 @@ public abstract class MoveItemsTaskMixin {
     @ModifyExpressionValue(method = "tickInteracting", at = @At(value = "CONSTANT", args = "intValue=60"))
     private int reduceInteractionTime(int original) {
         return getInteractionTime(original);
-        return getInteractionTime(original);
     }
 
-    @ModifyExpressionValue(method = "cooldown", at = @At(value = "CONSTANT", args = "intValue=140"))
     @ModifyExpressionValue(method = "cooldown", at = @At(value = "CONSTANT", args = "intValue=140"))
     private int reduceCooldown(int original) {
         return getCooldownTime(original);
-        return getCooldownTime(original);
     }
 
     @ModifyExpressionValue(method = "markVisited", at = @At(value = "CONSTANT", args = "intValue=10"))
-    @ModifyExpressionValue(method = "markVisited", at = @At(value = "CONSTANT", args = "intValue=10"))
     private int increaseVisitedChestMemory(int original) {
-        return getMaxChestsRemembered(original);
         return getMaxChestsRemembered(original);
     }
 }
