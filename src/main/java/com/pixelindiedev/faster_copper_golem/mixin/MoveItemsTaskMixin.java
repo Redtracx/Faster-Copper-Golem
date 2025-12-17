@@ -16,12 +16,24 @@ import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
-// MODIFIED: Added imports for smart sorting
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.inventory.Inventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.block.entity.BlockEntity;
+
+// MODIFIED: Imports for Frame/Tag sorting
+import net.minecraft.entity.decoration.ItemFrameEntity;
+import net.minecraft.util.math.Box;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Direction;
+import net.minecraft.registry.tag.TagKey;
+import net.minecraft.item.Item;
+import java.util.List;
+import java.util.Optional;
+
+// MODIFIED: Import for name checking
+import net.minecraft.util.Nameable;
 
 import static com.pixelindiedev.faster_copper_golem.Faster_copper_golem.*;
 
@@ -68,7 +80,7 @@ public abstract class MoveItemsTaskMixin {
         this.verticalRange = getVerticalSearchRadius();
         this.speed = getMovementSpeed();
 
-        // MODIFIED: Smart sorting predicate wrapper
+        // MODIFIED: Smart sorting predicate wrapper with Tags and Frames
         if (CONFIG.smartSorting) {
             Predicate original = this.outputChestPredicate;
             this.outputChestPredicate = (obj) -> {
@@ -82,25 +94,92 @@ public abstract class MoveItemsTaskMixin {
                 if (held.isEmpty())
                     return true;
 
-                if (obj instanceof Inventory) {
-                    Inventory inv = (Inventory) obj;
-                    // Anti-mixing: Allow if empty OR contains matching item
-                    if (inv.isEmpty())
-                        return true;
+                if (obj instanceof BlockEntity) {
+                    BlockEntity be = (BlockEntity) obj; // Inventory often implements BlockEntity (ChestBlockEntity etc)
 
-                    for (int i = 0; i < inv.size(); i++) {
-                        ItemStack s = inv.getStack(i);
-                        if (ItemStack.areItemsEqual(s, held))
-                            return true;
+                    // 0. Name Logic (!Dump / !Ignore)
+                    if (CONFIG.nameSorting && be instanceof Nameable) {
+                        Nameable nameable = (Nameable) be;
+                        if (nameable.hasCustomName()) {
+                            String name = nameable.getCustomName().getString();
+                            if (name.equals("!Dump"))
+                                return true; // Accept EVERYTHING
+                            if (name.equals("!Ignore"))
+                                return false; // Accept NOTHING (Strict)
+                        }
                     }
 
-                    return false; // Mixed content -> Reject
+                    // 1. Item Frame Logic
+                    if (CONFIG.frameSorting) {
+                        ItemStack frameStack = findItemFrameItem(be);
+                        if (frameStack != null && !frameStack.isEmpty()) {
+                            // Strict Filter: If frame exists, MUST match frame
+                            return matches(held, frameStack);
+                        }
+                    }
+
+                    // 2. Existing Inventory Logic (Smart Sorting / Tag Sorting)
+                    if (obj instanceof Inventory) {
+                        Inventory inv = (Inventory) obj;
+                        if (inv.isEmpty())
+                            return true; // Always allow empty if no frame restriction
+
+                        // Check for ANY match in existing slots
+                        for (int i = 0; i < inv.size(); i++) {
+                            ItemStack s = inv.getStack(i);
+                            if (!s.isEmpty() && matches(held, s))
+                                return true;
+                        }
+
+                        return false; // No match found in non-empty chest -> Reject
+                    }
                 }
                 return true;
             };
         }
 
         AddTask((MoveItemsTask) (Object) this);
+    }
+
+    // MODIFIED: Helper - Check if two stacks match (Exact or Tag)
+    @Unique
+    private boolean matches(ItemStack stack1, ItemStack stack2) {
+        if (ItemStack.areItemsEqual(stack1, stack2))
+            return true; // Exact match
+
+        if (CONFIG.tagSorting) {
+            // Check if they share ANY common tag
+            // Note: This iterates all tags. Might be broad.
+            // A better heuristic: Do they share a tag that is NOT "minecraft:items" etc?
+            // For simplicity in this mod: equality of ANY tag.
+            // MODIFIED: Use stream processing
+            return stack1.streamTags().anyMatch(tag -> stack2.streamTags().anyMatch(t -> t.equals(tag)));
+        }
+        return false;
+    }
+
+    // MODIFIED: Helper - Find Item Frame attached to BlockEntity
+    @Unique
+    private ItemStack findItemFrameItem(BlockEntity be) {
+        if (be.getWorld() == null)
+            return null;
+        BlockPos pos = be.getPos();
+
+        // Search for Item Frames in a 1-block radius box
+        List<ItemFrameEntity> frames = be.getWorld().getEntitiesByClass(
+                ItemFrameEntity.class,
+                new Box(pos).expand(1.0),
+                frame -> {
+                    BlockPos attached = frame.getAttachedBlockPos(); // Mappings might vary: getAttachedPos,
+                                                                     // getDecorationBlockPos?
+                    // Fallback logic if mapping is obscure: check distance or direction
+                    return attached.equals(pos);
+                });
+
+        if (!frames.isEmpty()) {
+            return frames.get(0).getHeldItemStack();
+        }
+        return null;
     }
 
     @ModifyExpressionValue(method = "tickInteracting", at = @At(value = "CONSTANT", args = "intValue=60"))

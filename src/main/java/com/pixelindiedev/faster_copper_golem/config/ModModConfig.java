@@ -23,6 +23,11 @@ public class ModModConfig {
     public InteractionTime gollemMovingSpeed = InteractionTime.Vanilla;
     // MODIFIED: Added smartSorting field
     public boolean smartSorting = true;
+    // MODIFIED: Added specific sorting options
+    public boolean frameSorting = true;
+    public boolean tagSorting = true;
+    // MODIFIED: Added power user naming option
+    public boolean nameSorting = true;
     public transient long lastModified = 0L;
 
     public static com.pixelindiedev.faster_copper_golem.config.ModModConfig load() {
@@ -75,6 +80,23 @@ public class ModModConfig {
         if (!obj.has("smartSorting")) {
             LOGGER.warn("Missing option 'smartSorting', adding default (true).");
             obj.addProperty("smartSorting", true);
+            changed = true;
+        }
+        // MODIFIED: Added checks for new sorting options
+        if (!obj.has("frameSorting")) {
+            LOGGER.warn("Missing option 'frameSorting', adding default (true).");
+            obj.addProperty("frameSorting", true);
+            changed = true;
+        }
+        if (!obj.has("tagSorting")) {
+            LOGGER.warn("Missing option 'tagSorting', adding default (true).");
+            obj.addProperty("tagSorting", true);
+            changed = true;
+        }
+        // MODIFIED: Added check for nameSorting
+        if (!obj.has("nameSorting")) {
+            LOGGER.warn("Missing option 'nameSorting', adding default (true).");
+            obj.addProperty("nameSorting", true);
             changed = true;
         }
 
