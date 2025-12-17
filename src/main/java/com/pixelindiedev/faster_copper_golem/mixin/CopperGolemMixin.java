@@ -48,14 +48,13 @@ public abstract class CopperGolemMixin {
         return (int) (original * ClientConfigCache.speedMultiplier);
     }
 
+    // MODIFIED: Fixed issue #1
+    // Reason: Animations were artificially stopped at high speeds (>4) instead of
+    // being accelerated.
     @Unique
     private void accelerate(AnimationState state, int speed) {
         if (state.isRunning()) {
-            if (speed > 4) {
-                state.stop();
-            } else {
-                state.skip(1, speed - 1);
-            }
+            state.skip(1, speed - 1);
         }
     }
 }
