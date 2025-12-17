@@ -1,6 +1,10 @@
 package com.pixelindiedev.faster_copper_golem.config;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public class ClientConfigCache {
+    private static final Logger LOGGER = LoggerFactory.getLogger("TEsting");
     public static float speedMultiplier = 1.0f;
     public static float movementSpeed = 1.0f;
     public static int interactionTime = 60;
