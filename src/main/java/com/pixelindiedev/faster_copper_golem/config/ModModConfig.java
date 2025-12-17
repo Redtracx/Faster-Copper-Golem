@@ -21,6 +21,8 @@ public class ModModConfig {
     public RememberCountEnum gollemAmountChestRemembered = RememberCountEnum.Many;
     public SearchRadiusEnum gollemSearchRadius = SearchRadiusEnum.Vanilla;
     public InteractionTime gollemMovingSpeed = InteractionTime.Vanilla;
+    // MODIFIED: Added smartSorting field
+    public boolean smartSorting = true;
     public transient long lastModified = 0L;
 
     public static com.pixelindiedev.faster_copper_golem.config.ModModConfig load() {
@@ -31,7 +33,8 @@ public class ModModConfig {
         if (configFile.exists()) {
             try (FileReader reader = new FileReader(configFile)) {
                 JsonElement element = JsonParser.parseReader(reader);
-                if (element.isJsonObject()) obj = element.getAsJsonObject();
+                if (element.isJsonObject())
+                    obj = element.getAsJsonObject();
             } catch (IOException e) {
                 LOGGER.error("Failed to read config, restoring defaults.", e);
                 config = new com.pixelindiedev.faster_copper_golem.config.ModModConfig();
@@ -66,6 +69,12 @@ public class ModModConfig {
         if (!obj.has("gollemMovingSpeed")) {
             LOGGER.warn("Missing option 'gollemMovingSpeed', adding default (Vanilla).");
             obj.addProperty("gollemMovingSpeed", InteractionTime.Vanilla.name());
+            changed = true;
+        }
+        // MODIFIED: Added check for smartSorting
+        if (!obj.has("smartSorting")) {
+            LOGGER.warn("Missing option 'smartSorting', adding default (true).");
+            obj.addProperty("smartSorting", true);
             changed = true;
         }
 
