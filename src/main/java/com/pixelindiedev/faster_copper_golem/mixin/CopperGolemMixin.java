@@ -13,35 +13,55 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
+// MODIFIED: Imports for GUI/Inventory
+import net.minecraft.inventory.SimpleInventory;
+import net.minecraft.screen.NamedScreenHandlerFactory;
+import net.minecraft.screen.ScreenHandler;
+import net.minecraft.text.Text;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.entity.player.PlayerInventory;
+import com.pixelindiedev.faster_copper_golem.screen.GolemFilterScreenHandler;
+
 @Mixin(value = CopperGolemEntity.class, priority = 800)
-public abstract class CopperGolemMixin implements CopperGolemAccessor {
+public abstract class CopperGolemMixin implements CopperGolemAccessor, NamedScreenHandlerFactory {
     // MODIFIED: Memory and Filter Storage
     @Unique
     private final java.util.Map<net.minecraft.item.Item, net.minecraft.util.math.BlockPos> faster_copper_golem$chestMemory = new java.util.HashMap<>();
-    @Unique
-    private final java.util.Set<net.minecraft.item.Item> faster_copper_golem$pickupFilter = new java.util.HashSet<>();
 
+    // MODIFIED: Inventory for filter (9 slots)
     @Unique
+    private final SimpleInventory faster_copper_golem$filterInventory = new SimpleInventory(9);
+
+    // NamedScreenHandlerFactory implementation
     @Override
-    public java.util.Set<net.minecraft.item.Item> faster_copper_golem$getPickupFilter() {
-        return faster_copper_golem$pickupFilter;
+    public Text getDisplayName() {
+        return Text.of("Copper Golem Filter");
+    }
+
+    @Override
+    public ScreenHandler createMenu(int syncId, PlayerInventory playerInventory, PlayerEntity player) {
+        return new GolemFilterScreenHandler(syncId, playerInventory, faster_copper_golem$filterInventory);
     }
 
     @Unique
     @Override
-    public void faster_copper_golem$toggleFilter(net.minecraft.item.Item item) {
-        if (faster_copper_golem$pickupFilter.contains(item)) {
-            faster_copper_golem$pickupFilter.remove(item);
-        } else {
-            faster_copper_golem$pickupFilter.add(item);
-        }
+    public SimpleInventory faster_copper_golem$getFilterInventory() {
+        return faster_copper_golem$filterInventory;
     }
 
+    // Unused method in interface now, but keeping implementation empty or removing
+    // if interface updated (interface WAS updated).
+    // The previous interface methods toggleFilter etc were removed in last step.
+
     @Unique
-    @Override
     public boolean faster_copper_golem$isItemAllowed(net.minecraft.item.Item item) {
-        // Blacklist logic: If in filter, NOT allowed.
-        return !faster_copper_golem$pickupFilter.contains(item);
+        // Blacklist logic: If item matches anything in inventory -> BLOCKED.
+        for (int i = 0; i < faster_copper_golem$filterInventory.size(); i++) {
+            net.minecraft.item.ItemStack s = faster_copper_golem$filterInventory.getStack(i);
+            if (!s.isEmpty() && s.getItem() == item)
+                return false; // Found in blacklist -> Blocked
+        }
+        return true;
     }
 
     @Unique
@@ -56,42 +76,29 @@ public abstract class CopperGolemMixin implements CopperGolemAccessor {
         return faster_copper_golem$chestMemory.get(item);
     }
 
-    // MODIFIED: Interaction to toggle filter (Shift-Right-Click)
+    // MODIFIED: Interaction to open Filter GUI (Shift-Right-Click)
     @Inject(method = "interactMob", at = @At("HEAD"), cancellable = true)
     private void onInteract(net.minecraft.entity.player.PlayerEntity player, net.minecraft.util.Hand hand,
             CallbackInfoReturnable<net.minecraft.util.ActionResult> cir) {
         if (player.isSneaking() && hand == net.minecraft.util.Hand.MAIN_HAND) {
-            net.minecraft.item.ItemStack stack = player.getStackInHand(hand);
-            if (!stack.isEmpty()) {
-                net.minecraft.item.Item item = stack.getItem();
-                faster_copper_golem$toggleFilter(item);
-
-                // Visual feedback (Particles)
-                boolean blocked = faster_copper_golem$pickupFilter.contains(item);
-                if (blocked) {
-                    // Smoke = Blocked
-                    for (int i = 0; i < 5; i++)
-                        self.getWorld().addParticle(net.minecraft.particle.ParticleTypes.SMOKE, self.getX(),
-                                self.getY() + 0.5, self.getZ(), 0, 0.1, 0);
-                } else {
-                    // Happy = Allowed
-                    for (int i = 0; i < 5; i++)
-                        self.getWorld().addParticle(net.minecraft.particle.ParticleTypes.HAPPY_VILLAGER, self.getX(),
-                                self.getY() + 0.5, self.getZ(), 0, 0.1, 0);
-                }
-
-                cir.setReturnValue(net.minecraft.util.ActionResult.SUCCESS);
-            }
+            // Open GUI
+            player.openHandledScreen(this);
+            cir.setReturnValue(net.minecraft.util.ActionResult.SUCCESS);
         }
     }
 
     // MODIFIED: Prevent pickup if filtered
-    @Inject(method = "canGather", at = @At("HEAD"), cancellable = true)
-    private void checkFilter(net.minecraft.item.ItemStack stack, CallbackInfoReturnable<Boolean> cir) {
-        if (!faster_copper_golem$isItemAllowed(stack.getItem())) {
-            cir.setReturnValue(false);
-        }
-    }
+    // Commented out due to mapping issues ("canGather" not found).
+    // Logic will only apply to inventory operations for now.
+    /*
+     * @Inject(method = "canGather", at = @At("HEAD"), cancellable = true)
+     * private void checkFilter(net.minecraft.item.ItemStack stack,
+     * CallbackInfoReturnable<Boolean> cir) {
+     * if (!faster_copper_golem$isItemAllowed(stack.getItem())) {
+     * cir.setReturnValue(false);
+     * }
+     * }
+     */
 
     @Unique
     private CopperGolemEntity self;

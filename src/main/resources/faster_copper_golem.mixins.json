@@ -6,10 +6,10 @@
   "mixins": [
     "CopperGolemMixin",
     "MoveItemsTaskAccessor",
-    "MoveItemsTaskMixin"
+    "MoveItemsTaskMixin",
+    "MobEntityMixin"
   ],
-  "client": [
-  ],
+  "client": [],
   "injectors": {
     "defaultRequire": 1
   },

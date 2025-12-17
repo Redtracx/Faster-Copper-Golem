@@ -3,6 +3,7 @@ package com.pixelindiedev.faster_copper_golem;
 import com.pixelindiedev.faster_copper_golem.config.ConfigSyncPayload;
 import com.pixelindiedev.faster_copper_golem.config.ModModConfig;
 import com.pixelindiedev.faster_copper_golem.mixin.MoveItemsTaskAccessor;
+import com.pixelindiedev.faster_copper_golem.screen.GolemFilterScreenHandler;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
@@ -11,6 +12,11 @@ import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.entity.ai.brain.task.MoveItemsTask;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.screen.ScreenHandlerType;
+import net.minecraft.resource.featuretoggle.FeatureSet;
+import net.minecraft.registry.Registry;
+import net.minecraft.registry.Registries;
+import net.minecraft.util.Identifier;
 
 import java.util.Collections;
 import java.util.Set;
@@ -19,6 +25,8 @@ import java.util.WeakHashMap;
 public class Faster_copper_golem implements ModInitializer {
     private static final Set<MoveItemsTask> loadedMoveItemTasks = Collections.newSetFromMap(new WeakHashMap<>());
     public static ModModConfig CONFIG;
+    public static final ScreenHandlerType<GolemFilterScreenHandler> GOLEM_FILTER_SCREEN_HANDLER = new ScreenHandlerType<>(
+            GolemFilterScreenHandler::new, FeatureSet.empty());
 
     private static int interactionTimeCache = -1;
     private static int cooldownTimeCache = -1;
@@ -29,7 +37,8 @@ public class Faster_copper_golem implements ModInitializer {
             clearCache();
             UpdateTasks();
 
-            for (ServerPlayerEntity player : server.getPlayerManager().getPlayerList()) sendConfigToPlayer(player);
+            for (ServerPlayerEntity player : server.getPlayerManager().getPlayerList())
+                sendConfigToPlayer(player);
         }
     }
 
@@ -48,22 +57,26 @@ public class Faster_copper_golem implements ModInitializer {
     }
 
     public static int getInteractionTime(int originalTime) {
-        if (interactionTimeCache == -1) interactionTimeCache = Math.round(originalTime * getSpeedMultiplier());
+        if (interactionTimeCache == -1)
+            interactionTimeCache = Math.round(originalTime * getSpeedMultiplier());
         return interactionTimeCache;
     }
 
     public static int getCooldownTime(int originalTime) {
-        if (cooldownTimeCache == -1) cooldownTimeCache = Math.round(originalTime * getSpeedMultiplier());
+        if (cooldownTimeCache == -1)
+            cooldownTimeCache = Math.round(originalTime * getSpeedMultiplier());
         return cooldownTimeCache;
     }
 
     public static int getInteractionTime() {
-        if (interactionTimeCache == -1) interactionTimeCache = Math.round(60 * getSpeedMultiplier());
+        if (interactionTimeCache == -1)
+            interactionTimeCache = Math.round(60 * getSpeedMultiplier());
         return interactionTimeCache;
     }
 
     public static int getCooldownTime() {
-        if (cooldownTimeCache == -1) cooldownTimeCache = Math.round(140 * getSpeedMultiplier());
+        if (cooldownTimeCache == -1)
+            cooldownTimeCache = Math.round(140 * getSpeedMultiplier());
         return cooldownTimeCache;
     }
 
@@ -140,7 +153,9 @@ public class Faster_copper_golem implements ModInitializer {
 
     public static void sendConfigToPlayer(ServerPlayerEntity player) {
         if (ServerPlayNetworking.canSend(player, ConfigSyncPayload.ID)) {
-            ConfigSyncPayload payload = new ConfigSyncPayload(getSpeedMultiplier(), getMovementSpeed(), getInteractionTime(), getCooldownTime(), getMaxStackSize(), getMaxChestsRemembered(), getHorizontalSearchRadius(), getVerticalSearchRadius());
+            ConfigSyncPayload payload = new ConfigSyncPayload(getSpeedMultiplier(), getMovementSpeed(),
+                    getInteractionTime(), getCooldownTime(), getMaxStackSize(), getMaxChestsRemembered(),
+                    getHorizontalSearchRadius(), getVerticalSearchRadius());
             ServerPlayNetworking.send(player, payload);
         }
     }
@@ -148,7 +163,8 @@ public class Faster_copper_golem implements ModInitializer {
     @Override
     public void onInitialize() {
         CONFIG = ModModConfig.load();
-        if (CONFIG.lastModified == 0L) CONFIG.lastModified = ModModConfig.configFile.lastModified();
+        if (CONFIG.lastModified == 0L)
+            CONFIG.lastModified = ModModConfig.configFile.lastModified();
 
         ServerTickEvents.START_SERVER_TICK.register(Faster_copper_golem::onServerTick);
 
@@ -156,5 +172,9 @@ public class Faster_copper_golem implements ModInitializer {
         ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {
             sendConfigToPlayer(handler.player);
         });
+
+        // MODIFIED: Register Screen Handler
+        Registry.register(Registries.SCREEN_HANDLER, Identifier.of("faster_copper_golem", "filter_screen"),
+                GOLEM_FILTER_SCREEN_HANDLER);
     }
 }

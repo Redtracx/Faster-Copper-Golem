@@ -12,4 +12,6 @@ public interface CopperGolemAccessor {
     void faster_copper_golem$rememberChest(Item item, BlockPos pos);
 
     BlockPos faster_copper_golem$getRememberedChest(Item item);
+
+    boolean faster_copper_golem$isItemAllowed(Item item);
 }
