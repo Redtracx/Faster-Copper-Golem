@@ -1,5 +1,6 @@
 package com.pixelindiedev.faster_copper_golem.mixin;
 
+import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.pixelindiedev.faster_copper_golem.config.ClientConfigCache;
 import net.minecraft.entity.AnimationState;
 import net.minecraft.entity.EntityType;
@@ -8,12 +9,10 @@ import net.minecraft.world.World;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Constant;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.ModifyConstant;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-@Mixin(value = CopperGolemEntity.class, priority = 1004)
+@Mixin(value = CopperGolemEntity.class, priority = 800)
 public abstract class CopperGolemMixin {
     @Unique
     private CopperGolemEntity self;
@@ -34,17 +33,17 @@ public abstract class CopperGolemMixin {
         accelerate(self.getDroppingNoItemAnimationState(), speed);
     }
 
-    @ModifyConstant(method = "clientTick", constant = @Constant(floatValue = 10.0F))
+    @ModifyExpressionValue(method = "clientTick", at = @At(value = "CONSTANT", args = "floatValue=10.0F"))
     private float editSpinHeadTimerPlus(float original) {
         return original * ClientConfigCache.speedMultiplier;
     }
 
-    @ModifyConstant(method = "clientTick", constant = @Constant(intValue = 200))
+    @ModifyExpressionValue(method = "clientTick", at = @At(value = "CONSTANT", args = "intValue=200"))
     private int editRandomNext(int original) {
         return (int) (original * ClientConfigCache.speedMultiplier);
     }
 
-    @ModifyConstant(method = "clientTick", constant = @Constant(intValue = 240))
+    @ModifyExpressionValue(method = "clientTick", at = @At(value = "CONSTANT", args = "intValue=240"))
     private int editRandomNext2(int original) {
         return (int) (original * ClientConfigCache.speedMultiplier);
     }
