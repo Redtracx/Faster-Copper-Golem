@@ -29,20 +29,30 @@ An enhanced fork of the original Faster Copper Golem mod with advanced sorting, 
 
 ## ⚙️ Configuration
 
-Access via ModMenu or edit `config/faster_copper_golem.json`:
+Access via **ModMenu** or edit `config/faster_copper_golem.json`:
 
 ```json
 {
-  "speedMultiplier": 2.0,
-  "horizontalSearchRadius": 16,
-  "verticalSearchRadius": 8,
-  "maxStackSize": 64,
+  "gollemInteractionTime": "Fastest",
+  "gollemMaxStackSize": 64,
+  "gollemSearchRadius": "Largest",
+  "gollemMovingSpeed": "Fastest",
+  "gollemAmountChestRemembered": "Extreme",
   "smartSorting": true,
   "frameSorting": true,
   "tagSorting": true,
   "nameSorting": true
 }
 ```
+
+**Enum Values:**
+- `gollemInteractionTime`: Vanilla, Fast, Faster, Fastest
+- `gollemSearchRadius`: Vanilla, Large, Larger, Largest, Extreme
+- `gollemMovingSpeed`: Vanilla, Fast, Faster, Fastest
+- `gollemAmountChestRemembered`: Vanilla, Many, More, Most, Extreme
+- `gollemMaxStackSize`: 16-64 (integer)
+
+All features can be toggled in-game via ModMenu!
 
 ## 🎮 Usage
 
