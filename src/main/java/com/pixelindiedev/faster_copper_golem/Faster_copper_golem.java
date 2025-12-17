@@ -7,6 +7,7 @@ import com.pixelindiedev.faster_copper_golem.screen.GolemFilterScreenHandler;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
+import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.entity.ai.brain.task.MoveItemsTask;
@@ -168,6 +169,7 @@ public class Faster_copper_golem implements ModInitializer {
 
         ServerTickEvents.START_SERVER_TICK.register(Faster_copper_golem::onServerTick);
 
+        PayloadTypeRegistry.playS2C().register(ConfigSyncPayload.ID, ConfigSyncPayload.CODEC);
         PayloadTypeRegistry.playS2C().register(ConfigSyncPayload.ID, ConfigSyncPayload.CODEC);
         ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {
             sendConfigToPlayer(handler.player);

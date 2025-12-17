@@ -1,6 +1,7 @@
 package com.pixelindiedev.faster_copper_golem.mixin;
 
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
+import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.pixelindiedev.faster_copper_golem.config.ClientConfigCache;
 import net.minecraft.entity.AnimationState;
 import net.minecraft.entity.EntityType;
@@ -140,15 +141,18 @@ public abstract class CopperGolemMixin implements CopperGolemAccessor, NamedScre
     }
 
     @ModifyExpressionValue(method = "clientTick", at = @At(value = "CONSTANT", args = "floatValue=10.0F"))
+    @ModifyExpressionValue(method = "clientTick", at = @At(value = "CONSTANT", args = "floatValue=10.0F"))
     private float editSpinHeadTimerPlus(float original) {
         return original * ClientConfigCache.speedMultiplier;
     }
 
     @ModifyExpressionValue(method = "clientTick", at = @At(value = "CONSTANT", args = "intValue=200"))
+    @ModifyExpressionValue(method = "clientTick", at = @At(value = "CONSTANT", args = "intValue=200"))
     private int editRandomNext(int original) {
         return (int) (original * ClientConfigCache.speedMultiplier);
     }
 
+    @ModifyExpressionValue(method = "clientTick", at = @At(value = "CONSTANT", args = "intValue=240"))
     @ModifyExpressionValue(method = "clientTick", at = @At(value = "CONSTANT", args = "intValue=240"))
     private int editRandomNext2(int original) {
         return (int) (original * ClientConfigCache.speedMultiplier);
