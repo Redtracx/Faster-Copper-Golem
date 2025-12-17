@@ -23,18 +23,20 @@ public class ModConfigScreen extends Screen {
     protected void init() {
         int y = height / 4;
 
-        addDrawableChild(ButtonWidget.builder(Text.literal("Interaction time: " + config.gollemInteractionTime), (btn) ->
-        {
-            InteractionTime[] values = InteractionTime.values();
-            int next = (config.gollemInteractionTime.ordinal() + 1) % values.length;
-            config.gollemInteractionTime = values[next];
-            btn.setMessage(Text.literal("Interaction time: " + config.gollemInteractionTime));
-            config.save();
-        }).dimensions(width / 2 - 125, y, 250, 20).build());
+        addDrawableChild(
+                ButtonWidget.builder(Text.literal("Interaction time: " + config.gollemInteractionTime), (btn) -> {
+                    InteractionTime[] values = InteractionTime.values();
+                    int next = (config.gollemInteractionTime.ordinal() + 1) % values.length;
+                    config.gollemInteractionTime = values[next];
+                    btn.setMessage(Text.literal("Interaction time: " + config.gollemInteractionTime));
+                    config.save();
+                }).dimensions(width / 2 - 125, y, 250, 20).build());
 
         y += 25;
 
-        addDrawableChild(new SliderWidget(width / 2 - 125, y, 250, 20, Text.literal("Maximum carry size: " + config.gollemMaxStackSize), (double) (config.gollemMaxStackSize - 16) / (64 - 16)) {
+        addDrawableChild(new SliderWidget(width / 2 - 125, y, 250, 20,
+                Text.literal("Maximum carry size: " + config.gollemMaxStackSize),
+                (double) (config.gollemMaxStackSize - 16) / (64 - 16)) {
             @Override
             protected void updateMessage() {
                 int value = 16 + (int) (this.value * (64 - 16));
@@ -50,8 +52,7 @@ public class ModConfigScreen extends Screen {
 
         y += 25;
 
-        addDrawableChild(ButtonWidget.builder(Text.literal("Search radius: " + config.gollemSearchRadius), (btn) ->
-        {
+        addDrawableChild(ButtonWidget.builder(Text.literal("Search radius: " + config.gollemSearchRadius), (btn) -> {
             SearchRadiusEnum[] values = SearchRadiusEnum.values();
             int next = (config.gollemSearchRadius.ordinal() + 1) % values.length;
             config.gollemSearchRadius = values[next];
@@ -61,8 +62,7 @@ public class ModConfigScreen extends Screen {
 
         y += 25;
 
-        addDrawableChild(ButtonWidget.builder(Text.literal("Movement speed: " + config.gollemMovingSpeed), (btn) ->
-        {
+        addDrawableChild(ButtonWidget.builder(Text.literal("Movement speed: " + config.gollemMovingSpeed), (btn) -> {
             InteractionTime[] values = InteractionTime.values();
             int next = (config.gollemMovingSpeed.ordinal() + 1) % values.length;
             config.gollemMovingSpeed = values[next];
@@ -72,19 +72,65 @@ public class ModConfigScreen extends Screen {
 
         y += 25;
 
-        addDrawableChild(ButtonWidget.builder(Text.literal("Max amount of chests to check: " + config.gollemAmountChestRemembered), (btn) ->
-        {
-            RememberCountEnum[] values = RememberCountEnum.values();
-            int next = (config.gollemAmountChestRemembered.ordinal() + 1) % values.length;
-            config.gollemAmountChestRemembered = values[next];
-            btn.setMessage(Text.literal("Max Amount of chests to check: " + config.gollemAmountChestRemembered));
-            config.save();
-        }).dimensions(width / 2 - 125, y, 250, 20).build());
-
+        addDrawableChild(ButtonWidget
+                .builder(Text.literal("Max amount of chests to check: " + config.gollemAmountChestRemembered),
+                        (btn) -> {
+                            RememberCountEnum[] values = RememberCountEnum.values();
+                            int next = (config.gollemAmountChestRemembered.ordinal() + 1) % values.length;
+                            config.gollemAmountChestRemembered = values[next];
+                            btn.setMessage(Text
+                                    .literal("Max Amount of chests to check: " + config.gollemAmountChestRemembered));
+                            config.save();
+                        })
+                .dimensions(width / 2 - 125, y, 250, 20).build());
 
         y += 30;
 
-        addDrawableChild(ButtonWidget.builder(Text.literal("Done"), (btn) -> MinecraftClient.getInstance().setScreen(parent)).dimensions(width / 2 - 100, y, 200, 20).build());
+        // MODIFIED: New sorting feature toggles
+        addDrawableChild(ButtonWidget.builder(
+                Text.literal("Smart Sorting: " + (config.smartSorting ? "ON" : "OFF")),
+                (btn) -> {
+                    config.smartSorting = !config.smartSorting;
+                    btn.setMessage(Text.literal("Smart Sorting: " + (config.smartSorting ? "ON" : "OFF")));
+                    config.save();
+                }).dimensions(width / 2 - 125, y, 250, 20).build());
+
+        y += 25;
+
+        addDrawableChild(ButtonWidget.builder(
+                Text.literal("Item Frame Sorting: " + (config.frameSorting ? "ON" : "OFF")),
+                (btn) -> {
+                    config.frameSorting = !config.frameSorting;
+                    btn.setMessage(Text.literal("Item Frame Sorting: " + (config.frameSorting ? "ON" : "OFF")));
+                    config.save();
+                }).dimensions(width / 2 - 125, y, 250, 20).build());
+
+        y += 25;
+
+        addDrawableChild(ButtonWidget.builder(
+                Text.literal("Tag-Based Sorting: " + (config.tagSorting ? "ON" : "OFF")),
+                (btn) -> {
+                    config.tagSorting = !config.tagSorting;
+                    btn.setMessage(Text.literal("Tag-Based Sorting: " + (config.tagSorting ? "ON" : "OFF")));
+                    config.save();
+                }).dimensions(width / 2 - 125, y, 250, 20).build());
+
+        y += 25;
+
+        addDrawableChild(ButtonWidget.builder(
+                Text.literal("Name Commands (!Dump/!Ignore): " + (config.nameSorting ? "ON" : "OFF")),
+                (btn) -> {
+                    config.nameSorting = !config.nameSorting;
+                    btn.setMessage(
+                            Text.literal("Name Commands (!Dump/!Ignore): " + (config.nameSorting ? "ON" : "OFF")));
+                    config.save();
+                }).dimensions(width / 2 - 125, y, 250, 20).build());
+
+        y += 30;
+
+        addDrawableChild(
+                ButtonWidget.builder(Text.literal("Done"), (btn) -> MinecraftClient.getInstance().setScreen(parent))
+                        .dimensions(width / 2 - 100, y, 200, 20).build());
     }
 
     @Override

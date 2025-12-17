@@ -15,11 +15,19 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 // MODIFIED: Imports for GUI/Inventory
 import net.minecraft.inventory.SimpleInventory;
+import net.minecraft.inventory.Inventories;
 import net.minecraft.screen.NamedScreenHandlerFactory;
 import net.minecraft.screen.ScreenHandler;
 import net.minecraft.text.Text;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
+import net.minecraft.nbt.NbtCompound;
+import net.minecraft.nbt.NbtList;
+import net.minecraft.nbt.NbtElement;
+import net.minecraft.item.Item;
+import net.minecraft.registry.Registries;
+import net.minecraft.util.Identifier;
+import net.minecraft.util.math.BlockPos;
 import com.pixelindiedev.faster_copper_golem.screen.GolemFilterScreenHandler;
 
 @Mixin(value = CopperGolemEntity.class, priority = 800)
@@ -31,6 +39,12 @@ public abstract class CopperGolemMixin implements CopperGolemAccessor, NamedScre
     // MODIFIED: Inventory for filter (9 slots)
     @Unique
     private final SimpleInventory faster_copper_golem$filterInventory = new SimpleInventory(9);
+
+    // MODIFIED: NBT keys for persistence
+    @Unique
+    private static final String NBT_FILTER_INVENTORY = "faster_copper_golem$FilterInventory";
+    @Unique
+    private static final String NBT_CHEST_MEMORY = "faster_copper_golem$ChestMemory";
 
     // NamedScreenHandlerFactory implementation
     @Override
@@ -74,6 +88,12 @@ public abstract class CopperGolemMixin implements CopperGolemAccessor, NamedScre
     @Override
     public net.minecraft.util.math.BlockPos faster_copper_golem$getRememberedChest(net.minecraft.item.Item item) {
         return faster_copper_golem$chestMemory.get(item);
+    }
+
+    @Unique
+    @Override
+    public java.util.Map<net.minecraft.item.Item, net.minecraft.util.math.BlockPos> faster_copper_golem$getChestMemory() {
+        return faster_copper_golem$chestMemory;
     }
 
     // MODIFIED: Interaction to open Filter GUI (Shift-Right-Click)
@@ -142,5 +162,81 @@ public abstract class CopperGolemMixin implements CopperGolemAccessor, NamedScre
         if (state.isRunning()) {
             state.skip(1, speed - 1);
         }
+    }
+
+    // MODIFIED: NBT Persistence - Save filter inventory and chest memory
+    @Inject(method = "writeNbt", at = @At("RETURN"))
+    private void saveCustomData(NbtCompound nbt, CallbackInfoReturnable<NbtCompound> cir) {
+        // Save filter inventory - manually serialize each slot
+        NbtList filterList = new NbtList();
+        for (int i = 0; i < faster_copper_golem$filterInventory.size(); i++) {
+            net.minecraft.item.ItemStack stack = faster_copper_golem$filterInventory.getStack(i);
+            if (!stack.isEmpty()) {
+                NbtCompound slotNbt = new NbtCompound();
+                slotNbt.putByte("Slot", (byte) i);
+                slotNbt.putString("id", Registries.ITEM.getId(stack.getItem()).toString());
+                slotNbt.putInt("Count", stack.getCount());
+                filterList.add(slotNbt);
+            }
+        }
+        nbt.put(NBT_FILTER_INVENTORY, filterList);
+
+        // Save chest memory
+        NbtList memoryList = new NbtList();
+        for (java.util.Map.Entry<Item, BlockPos> entry : faster_copper_golem$chestMemory.entrySet()) {
+            NbtCompound entryNbt = new NbtCompound();
+            entryNbt.putString("item", Registries.ITEM.getId(entry.getKey()).toString());
+            entryNbt.putLong("pos", entry.getValue().asLong());
+            memoryList.add(entryNbt);
+        }
+        nbt.put(NBT_CHEST_MEMORY, memoryList);
+    }
+
+    // MODIFIED: NBT Persistence - Load filter inventory and chest memory
+    @Inject(method = "readNbt", at = @At("RETURN"))
+    private void loadCustomData(NbtCompound nbt, CallbackInfo ci) {
+        // Load filter inventory
+        nbt.getList(NBT_FILTER_INVENTORY).ifPresent(filterList -> {
+            faster_copper_golem$filterInventory.clear();
+            for (int i = 0; i < filterList.size(); i++) {
+                int finalI = i;
+                filterList.getCompound(finalI).ifPresent(slotNbt -> {
+                    slotNbt.getByte("Slot").ifPresent(slotByte -> {
+                        int slot = slotByte;
+                        if (slot >= 0 && slot < faster_copper_golem$filterInventory.size()) {
+                            slotNbt.getString("id").ifPresent(itemIdStr -> {
+                                Identifier itemId = Identifier.tryParse(itemIdStr);
+                                if (itemId != null && Registries.ITEM.containsId(itemId)) {
+                                    Item item = Registries.ITEM.get(itemId);
+                                    int count = slotNbt.getInt("Count").orElse(1);
+                                    net.minecraft.item.ItemStack stack = new net.minecraft.item.ItemStack(item, count);
+                                    faster_copper_golem$filterInventory.setStack(slot, stack);
+                                }
+                            });
+                        }
+                    });
+                });
+            }
+        });
+
+        // Load chest memory
+        nbt.getList(NBT_CHEST_MEMORY).ifPresent(memoryList -> {
+            faster_copper_golem$chestMemory.clear();
+            for (int i = 0; i < memoryList.size(); i++) {
+                int finalI = i;
+                memoryList.getCompound(finalI).ifPresent(entryNbt -> {
+                    entryNbt.getString("item").ifPresent(itemIdStr -> {
+                        Identifier itemId = Identifier.tryParse(itemIdStr);
+                        if (itemId != null && Registries.ITEM.containsId(itemId)) {
+                            Item item = Registries.ITEM.get(itemId);
+                            entryNbt.getLong("pos").ifPresent(posLong -> {
+                                BlockPos pos = BlockPos.fromLong(posLong);
+                                faster_copper_golem$chestMemory.put(item, pos);
+                            });
+                        }
+                    });
+                });
+            }
+        });
     }
 }

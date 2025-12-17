@@ -61,6 +61,16 @@ public abstract class MoveItemsTaskMixin {
     @Unique
     private LivingEntity faster_copper_golem$capturedOwner;
 
+    // MODIFIED: Helper to access Golem's chest memory
+    @Unique
+    private Map<Item, BlockPos> faster_copper_golem$getMemory() {
+        if (faster_copper_golem$capturedOwner instanceof CopperGolemAccessor) {
+            return ((CopperGolemAccessor) faster_copper_golem$capturedOwner)
+                    .faster_copper_golem$getChestMemory();
+        }
+        return java.util.Collections.emptyMap();
+    }
+
     // MODIFIED: Capture owner in shouldRun
     @Inject(method = "shouldRun", at = @At("HEAD"))
     private void captureOwner(ServerWorld world, LivingEntity entity, CallbackInfoReturnable<Boolean> cir) {
@@ -95,7 +105,32 @@ public abstract class MoveItemsTaskMixin {
                     return true;
 
                 if (obj instanceof BlockEntity) {
-                    BlockEntity be = (BlockEntity) obj; // Inventory often implements BlockEntity (ChestBlockEntity etc)
+                    BlockEntity be = (BlockEntity) obj;
+                    BlockPos chestPos = be.getPos();
+                    Item heldItem = held.getItem();
+
+                    // MODIFIED: Memory Pathfinding - Prioritize known chests
+                    Map<Item, BlockPos> memory = faster_copper_golem$getMemory();
+                    boolean isKnownChest = memory.containsKey(heldItem)
+                            && memory.get(heldItem).equals(chestPos);
+
+                    // If this is a known chest from memory, skip most checks and accept immediately
+                    // (unless overridden by !Ignore command)
+                    if (isKnownChest) {
+                        // Still check !Ignore command
+                        if (CONFIG.nameSorting && be instanceof Nameable) {
+                            Nameable nameable = (Nameable) be;
+                            if (nameable.hasCustomName()) {
+                                String name = nameable.getCustomName().getString();
+                                if (name.equals("!Ignore"))
+                                    return false; // Respect !Ignore even for known chests
+                            }
+                        }
+                        // Known chest - accept immediately!
+                        return true;
+                    }
+
+                    // For unknown chests, apply normal filtering logic:
 
                     // 0. Name Logic (!Dump / !Ignore)
                     if (CONFIG.nameSorting && be instanceof Nameable) {
